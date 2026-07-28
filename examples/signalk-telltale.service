@@ -1,0 +1,35 @@
+# systemd unit: run the Telltale connector on boot in DEFER mode.
+#
+# "Defer" = record continuously to the SD card and buffer uploads, using NO internet — perfect
+# for a metered link (Starlink/cellular) at sea. Uploads happen ashore via a separate --flush
+# trigger (see examples/flush-on-marina-wifi.md).
+#
+# Install:
+#   sudo cp signalk_telltale.py /usr/local/bin/
+#   sudo cp examples/signalk-telltale.service /etc/systemd/system/
+#   # edit the ExecStart below: set --boat, --station-key, --race
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now signalk-telltale
+#   journalctl -u signalk-telltale -f      # watch it
+
+[Unit]
+Description=Telltale Signal K connector (defer mode — buffer at sea, flush ashore)
+After=network-online.target signalk.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Run as the pi user so the local log lives under that user's home (~/telltale-device).
+User=pi
+ExecStart=/usr/bin/python3 /usr/local/bin/signalk_telltale.py \
+    --telltale https://telltaleracing.com \
+    --signalk http://localhost:3000 \
+    --boat "YOUR BOAT" \
+    --station-key YOUR_STATION_KEY \
+    --race open \
+    --defer
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,30 @@
+name: ci
+
+# Cheap sanity check on every push / PR: the Python must byte-compile and the shell scripts
+# must parse. No dependencies, no network — just "does it even load".
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Byte-compile the Python (stdlib only, must load on a stock Pi)
+        run: |
+          python -m py_compile $(git ls-files '*.py')
+
+      - name: Parse the shell scripts
+        run: |
+          for f in $(git ls-files '*.sh'); do
+            echo "bash -n $f"
+            bash -n "$f"
+          done

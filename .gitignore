@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# connector runtime data — local logs + offline queue (never commit boat data or keys)
+telltale-device/
+*.jsonl
+queue.jsonl
+
+# secrets / keys — keep these OUT of the repo
+*.key
+*-key.txt
+station-key*.txt
+*_secret*
+.env
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

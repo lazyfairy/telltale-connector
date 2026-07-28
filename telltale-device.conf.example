@@ -1,0 +1,48 @@
+# Telltale connector config — copy to ~/telltale-device.conf and edit.
+#
+#   cp telltale-device.conf.example ~/telltale-device.conf
+#   nano ~/telltale-device.conf
+#   python3 signalk_telltale.py            # it reads ~/telltale-device.conf automatically
+#
+# Format: key = value, one per line. '#' or ';' starts a comment. Quotes are optional.
+# The command line ALWAYS overrides the file, so you can keep your setup here and still
+# tweak on the fly (e.g. `python3 signalk_telltale.py --mode defer`).
+
+# ---- where to read from / write to ----
+signalk     = http://localhost:3000
+telltale    = https://telltaleracing.com
+
+# ---- who you are ----
+boat        = YOUR BOAT              # leave blank to push AIS only (a shore station)
+race        = open                  # the race id for the live feed
+station_key = YOUR_STATION_KEY       # get one from https://telltaleracing.com/contribute (needed to push AIS)
+boat_key    =                        # your boat's write key (bk_...) if the boat is CLAIMED on Telltale
+private     = false                  # true = club-only (recommended for junior/youth boats)
+share       = true                   # false = log locally but never upload (your data stays yours)
+
+# ---- rates & storage ----
+interval    = 5                      # seconds between local log samples
+keep_days   = 60                     # days of local track logs to keep on the SD card
+max_queue   = 100000                 # max buffered fixes before the oldest are dropped
+
+# ---- data posture on a metered link (Starlink / cellular) ----
+# mode: full | sip | defer
+#   full  = upload every fix (use on unmetered WiFi)
+#   sip   = keep the FULL signal set but upload live only every sip_interval seconds (a light trickle)
+#   defer = upload NOTHING at sea; buffer it, then --flush ashore
+mode         = full
+sip_interval = 120                   # seconds between live uploads in sip mode
+fleet        =                       # comma-separated MMSIs to republish (empty = every vessel heard).
+                                     # set to the race fleet to trickle ~10 boats instead of 300, e.g:
+                                     # fleet = 512004617, 512010800, 512218840
+
+# ---- auto-override: switch mode by which link is actually live ----
+# With auto = true, the connector checks each cycle which link is carrying traffic and switches:
+#   on the CHEAP link      -> mode_cheap
+#   on the EXPENSIVE link  -> mode_expensive
+# It decides "cheap" by: cheap_interface is the active egress -> cheap; else NetworkManager's
+# metered flag; else UNKNOWN -> treated as expensive (never burns metered data on a guess).
+auto            = false
+cheap_interface =                    # your cellular interface name, e.g. wwan0 (run `ip route get 8.8.8.8` at sea/ashore to see it)
+mode_cheap      = full               # what to do when the cheap link is up
+mode_expensive  = sip                # what to do when only the expensive link is up (sip or defer)
