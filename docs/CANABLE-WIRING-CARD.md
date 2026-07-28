@@ -131,12 +131,16 @@ gateway can't do that; only a computer can. You've got three sensible choices:
   It runs **"headless"**: no screen or keyboard needed on the boat at all. Downside: it's a
   single-purpose little appliance — it does the boat-data job and not much else.
 - **A repurposed mini-PC running Linux** — a proper computer with real storage and memory that also
-  **doubles as your whole nav station**. Pair it with a **touchscreen** and one screen gives you charts,
-  Telltale, weather, web and email — **way more versatile, and a lot cheaper, than buying a new
-  chartplotter** — and the touchscreen means **no keyboard to fumble with offshore**. The honest
-  downsides: it **uses a lot more power** (roughly 15–65+ watts vs a Pi's handful — a real consideration
-  on battery or solar), and it's **more of a faff to set up**. Brilliant if you want one do-everything
-  machine at the nav table; overkill if you just want the data flowing.
+  **doubles as a full below-decks nav station**. Pair it with a **touchscreen** and one screen at the nav
+  table gives you charts, Telltale, weather, web and email — **far more versatile, and cheaper, than
+  adding another big multifunction display down below** — and the touchscreen means **no keyboard to
+  fumble with offshore**. **It does *not* replace a cockpit chartplotter, though** — a proper plotter is
+  marine-built (waterproof, sunlight-readable, happy mounted outside at the helm), which a consumer PC
+  and touchscreen simply aren't. Think of it as the do-everything brain **below**, working *alongside*
+  the plotter **outside** — not instead of it. Honest downsides: it **uses a lot more power** (roughly
+  15–65+ watts vs a Pi's handful — a real consideration on battery or solar), and it's **more of a faff
+  to set up**. Brilliant if you want one do-everything machine at the nav table; overkill if you just
+  want the data flowing.
 - **A nav computer you already run** — if you've already got a machine that stays powered at the nav
   station, just run the software on that. Nothing new to buy.
 
@@ -148,9 +152,10 @@ This is where the setup pain usually hides. Two ways to go:
   from your **phone or laptop over the boat WiFi** (Signal K and Telltale just open in a browser). This
   deletes the whole "mount a screen, find a keyboard" headache.
 - **With a screen (a real nav-station machine, like a mini-PC):** you'll want a display and input:
-  - **Screen:** a small **12 V HDMI monitor**, a marine display, or — best for offshore — a
-    **touchscreen** (skip the keyboard entirely; tap it with wet hands on a pitching boat, the way a
-    plotter works, and it's the input that actually suits being at sea).
+  - **Screen:** a small **12 V HDMI monitor**, a marine display, or — best at the nav table offshore —
+    a **touchscreen** (skip the keyboard entirely; tap it on a pitching boat down below — the input that
+    actually suits being at sea). Note a consumer touchscreen lives **below decks**; the weatherproof,
+    sunlight-readable screen for **outside at the helm** is your chartplotter's job.
   - **Keyboard / mouse:** a cheap **wired** USB keyboard, or — nicer at a nav table — a **mini wireless
     keyboard-with-trackpad that uses a little USB dongle** (the 2.4 GHz kind). **Avoid Bluetooth
     keyboards and mice on a boat** — they're fiddly to pair and drop out at the worst moment (learned
