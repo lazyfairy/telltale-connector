@@ -18,13 +18,14 @@ always logged locally on your own box too, and it's exportable from Telltale at 
 
 | File | What it does |
 |---|---|
-| **`signalk_telltale.py`** | The connector. Reads a Signal K server and pushes own-boat instruments + other vessels' AIS to Telltale. Store-and-forward, offline logging, **defer/flush for metered links**. Pure stdlib — runs on any Pi. |
+| **`signalk_telltale.py`** | The connector. Reads a Signal K server and pushes own-boat instruments + other vessels' AIS to Telltale. Store-and-forward, offline logging, **defer/flush for metered links**, and an optional **on-boat crew tactical-sync server** (`--boat-sync`). Pure stdlib — runs on any Pi. |
+| **`boat_sync.py`** | **Boat-local crew sync (LAN-only).** A tiny web server the connector can run so every phone/tablet on the boat WiFi shares the same pinged start line + mark positions live — the boat auto-keeps the tightest GPS fix. **Never leaves the boat** (nothing sent to Telltale). See [`--boat-sync`](#share-the-crew-cockpit-on-the-boat-wifi----boat-sync). |
 | **`provision.sh`** | One-command installer that turns a fresh Raspberry Pi into a shore AIS station or a boat device, auto-starting on boot. |
 | **`nmea_wifi_telltale.py`** | Bridge for boats that emit NMEA over WiFi/TCP/UDP (no Signal K needed). See [`docs/NMEA-WIFI-BRIDGE.md`](docs/NMEA-WIFI-BRIDGE.md). |
 | **`ais_relay.py`** | Relay AIS from a local receiver to Telltale (and optionally on to other consumers). |
 | **`setup-windows.ps1`** | Windows one-liner for a PC-based feeder. |
 | **`firmware/`** | ESP32 gateway firmware: `telltale_gateway` (NMEA 0183→WiFi) and `telltale_gateway_n2k` (NMEA 2000/CAN→WiFi). The ~NZ$20 DIY WiFi option. |
-| **`docs/CANABLE-WIRING-CARD.md`** | Wiring/setup card for tapping an NMEA 2000 backbone (CANable / Pi / WiFi-gateway paths). |
+| **`docs/CANABLE-WIRING-CARD.md`** | **Plain-English guide** to getting boat data into Telltale — every jargon term explained (NMEA 2000, Signal K, Pi, Linux, AIS), the laptop / Pi / mini-PC / WiFi-gateway options, "does it need a screen?", and where to buy (NZ). Written for non-technical owners; experts skim to the tables. |
 
 ---
 
@@ -134,6 +135,31 @@ cheap_interface = wwan0
 mode_cheap  = full
 mode_expensive = sip
 ```
+
+---
+
+## Share the crew cockpit on the boat WiFi — `--boat-sync`
+
+Turn on a small **LAN-only** server so every phone/tablet on the boat shares the same tactical
+picture — the pinged **start-line ends** and **mark positions** — live, across the whole crew:
+
+```bash
+python3 signalk_telltale.py --boat "Your Boat" --station-key KEY --race NAME \
+  --boat-sync --boat-sync-code AB12 --boat-sync-webroot ~/telltale-pwa
+```
+
+- **Best-accuracy wins.** When two crew ping the same mark, the boat keeps the **tightest GPS fix** —
+  a marine-grade fix automatically beats a phone in a pocket. No fiddling, no one reading a screen out.
+- **It never leaves the boat.** This data is **not** sent to Telltale — it lives only on the boat's
+  own network. (It's completely separate from the track/AIS the connector uploads.)
+- **Serves the page too.** Point `--boat-sync-webroot` at a copy of the tactician page and the box
+  hosts it over the boat WiFi at `http://<box>:8137/start` — so it works with **no internet at all**,
+  and crew phones load it same-origin (no browser security snags).
+- **Keep out the neighbours.** Set a short `--boat-sync-code` so a nearby boat on a shared marina WiFi
+  can't join in.
+
+Off by default. Every flag also lives in `telltale-device.conf` (`boat_sync = on`, `boat_sync_port`,
+`boat_sync_code`, `boat_sync_webroot`, `boat_sync_iface`). See `boat_sync.py` for the details.
 
 ---
 
