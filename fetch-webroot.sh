@@ -24,8 +24,9 @@ BASE="${BASE%/}"
 echo "Fetching the tactician page from $BASE into $WEBROOT ..."
 mkdir -p "$WEBROOT/static"
 
-# the page itself
+# the pages: the tactician (/start) and the at-sea cockpit (/cockpit)
 curl -fsSL "$BASE/start" -o "$WEBROOT/start.html"
+curl -fsSL "$BASE/cockpit" -o "$WEBROOT/cockpit.html"
 # the crew-sync client (required for the shared cockpit)
 curl -fsSL "$BASE/static/boat-sync-client.js" -o "$WEBROOT/static/boat-sync-client.js"
 # the contribute promo widget (optional — the page guards for its absence)

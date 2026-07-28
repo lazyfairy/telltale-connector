@@ -24,7 +24,7 @@ from urllib.parse import urlparse, parse_qs
 # ----------------------------------------------------------------------------- config / constants
 DEFAULT_PORT = 8137
 STALE_S = {"mark": 3600, "line-rc": 1200, "line-pin": 1200}   # marks drift slower than a line
-STATIC_ROUTES = {"/": "start.html", "/start": "start.html"}  # friendly aliases; everything else maps path->file
+STATIC_ROUTES = {"/": "start.html", "/start": "start.html", "/cockpit": "cockpit.html"}  # friendly aliases; everything else maps path->file
 STATIC_EXT_CT = {".html": "text/html; charset=utf-8", ".js": "application/javascript",
                  ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg",
                  ".ico": "image/x-icon", ".json": "application/json", ".webmanifest": "application/manifest+json",
@@ -81,7 +81,20 @@ class TacticalStore:
         with self._lock:
             r = self._data.get(race) or {"marks": {}, "line": {}}
             return {"rev": self._rev, "boat": self.boat, "race": race,
-                    "marks": dict(r.get("marks", {})), "line": dict(r.get("line", {}))}
+                    "marks": dict(r.get("marks", {})), "line": dict(r.get("line", {})),
+                    "gun": r.get("gun")}
+
+    def set_gun(self, race, gun):
+        """Set the shared start gun (epoch ms, or None to clear) for a race — last write wins. Returns snapshot."""
+        with self._lock:
+            r = self._data.setdefault(race, {"marks": {}, "line": {}})
+            r["gun"] = gun
+            self._rev += 1
+            self._persist()
+            snap = {"rev": self._rev, "boat": self.boat, "race": race,
+                    "marks": dict(r.get("marks", {})), "line": dict(r.get("line", {})), "gun": r.get("gun")}
+        self._fanout(snap)
+        return snap
 
     def upsert(self, race, kind, ping, name=None, force=False):
         """Apply one ping under the merge rule. Returns (changed, snapshot)."""
@@ -108,7 +121,7 @@ class TacticalStore:
                 self._rev += 1
                 self._persist()
             snap = {"rev": self._rev, "boat": self.boat, "race": race,
-                    "marks": dict(r.get("marks", {})), "line": dict(r.get("line", {}))}
+                    "marks": dict(r.get("marks", {})), "line": dict(r.get("line", {})), "gun": r.get("gun")}
         if changed:
             self._fanout(snap)
         return changed, snap
@@ -229,10 +242,15 @@ def make_handler(store, code, webroot):
             if not d:
                 return self._deny("bad json", 400)
             race = (parse_qs(u.query).get("race", [d.get("race", "open")])[0])
+            kind = d.get("kind")
+            if kind == "gun":                          # the shared start gun — a number (epoch ms) or null
+                g = d.get("gun")
+                if g is not None and not isinstance(g, (int, float)):
+                    return self._deny("bad gun", 400)
+                return self._json(store.set_gun(race, g))
             ping = _clean_ping(d)
             if ping is None:
                 return self._deny("bad ping", 400)
-            kind = d.get("kind")
             name = (d.get("name") or "")[:40] if kind == "mark" else None
             if kind not in ("mark", "line-rc", "line-pin") or (kind == "mark" and not name):
                 return self._deny("bad kind/name", 400)
