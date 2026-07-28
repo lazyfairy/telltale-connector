@@ -46,3 +46,14 @@ auto            = false
 cheap_interface =                    # your cellular interface name, e.g. wwan0 (run `ip route get 8.8.8.8` at sea/ashore to see it)
 mode_cheap      = full               # what to do when the cheap link is up
 mode_expensive  = sip                # what to do when only the expensive link is up (sip or defer)
+
+# ---- boat-local crew sync (P1): share tactical pings across the crew's phones/tablets ----
+# When on, the connector runs a tiny web server ON THE BOAT WIFI ONLY. Every device that opens it
+# shares the same pinged start-line ends and mark positions live, and the boat keeps the TIGHTEST
+# GPS fix automatically (a marine-grade fix beats a phone). This data NEVER leaves the boat - it is
+# not sent to telltaleracing.com. Off by default.
+boat_sync         = false            # true = run the crew tactical-sync server
+boat_sync_port    = 8137
+boat_sync_code    =                  # a short pairing code (e.g. AB12) so a neighbouring boat cannot join in a marina
+boat_sync_webroot =                  # dir holding the tactician page to serve at /start over the boat wifi (else API-only)
+boat_sync_iface   =                  # LAN interface to bind (auto-detect if blank); never binds your uplink

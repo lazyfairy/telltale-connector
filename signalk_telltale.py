@@ -410,6 +410,15 @@ def main():
     ap.add_argument("--config", default="",
                     help="path to a key=value config file (default: ~/telltale-device.conf if present). "
                          "Every flag can be set there; the command line overrides the file.")
+    # ---- boat-local crew sync (P1): a LAN-only server so every device on the boat shares the same pinged
+    #      marks + start line. NEVER egresses to telltaleracing.com (boat-crew-only). See boat_sync.py. ----
+    ap.add_argument("--boat-sync", action="store_true",
+                    help="run the LAN-only crew tactical-sync server (shared pinged marks/line; never leaves the boat)")
+    ap.add_argument("--boat-sync-port", type=int, default=8137)
+    ap.add_argument("--boat-sync-code", default="", help="pairing code required on the sync API (set one for marinas)")
+    ap.add_argument("--boat-sync-webroot", default="",
+                    help="dir holding the tactician PWA to serve at /start over the boat wifi (else API-only)")
+    ap.add_argument("--boat-sync-iface", default="", help="LAN interface to bind the sync server to (auto if unset)")
 
     # Load the config file (from --config, else the default location) and fold it in as defaults,
     # so a contributor can drive everything from the file and the CLI still overrides when needed.
@@ -462,6 +471,23 @@ def main():
               "(light trickle for a metered link)."
               % (a.interval, a.sip_interval,
                  (" | fleet=%d boats" % len(fleet)) if fleet else " | all vessels"), flush=True)
+
+    # ---- boat-local crew sync server (opt-in, LAN-only, never egresses) ----
+    if getattr(a, "boat_sync", False):
+        try:
+            import threading
+            import boat_sync as _bs
+            _wr = a.boat_sync_webroot or os.path.join(os.path.dirname(os.path.abspath(__file__)), "webroot")
+            _wr = _wr if os.path.isdir(_wr) else ""
+            _httpd, _ = _bs.run(port=int(a.boat_sync_port), code=a.boat_sync_code, webroot=_wr,
+                                store_path=os.path.join(a.datadir, "boat-tactical.json"),
+                                boat=a.boat, iface=(a.boat_sync_iface or None))
+            threading.Thread(target=_httpd.serve_forever, daemon=True).start()
+            print("[sk->tt] boat-sync: crew tactical sync on http://%s:%s (LAN-only, code=%s, PWA=%s) — never egresses"
+                  % (_httpd.server_address[0], _httpd.server_address[1],
+                     "set" if a.boat_sync_code else "NONE", "served" if _wr else "api-only"), flush=True)
+        except Exception as _e:
+            print("[sk->tt] boat-sync failed to start: %s (continuing without it)" % _e, flush=True)
 
     last_mode = None
     while True:
