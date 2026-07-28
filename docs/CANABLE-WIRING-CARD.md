@@ -9,6 +9,14 @@ words to follow along; we explain each one as it comes up.
 > **This is a "prove it works" build.** The goal is the **cheapest, simplest** way to see your boat's
 > data flowing into Telltale — something you can then show other boats and say "here, copy this."
 
+> **Treat this as a map, not gospel.** There's a big, active world of people building exactly this kind
+> of thing — the **Signal K** and **OpenCPN** communities, marine-electronics forums, endless YouTube
+> build logs. We're just **overviewing the options so you can see what's possible** — the specific
+> gadgets, prices and steps below are **examples to give you the idea, not the only right answer**. Do
+> your own research, ask around, mix and match to suit your boat. And if you'd rather skip the rabbit
+> hole entirely, **message us and we'll point you at the one path that fits** — this is meant to open a
+> door, not hand you a rulebook.
+
 ---
 
 ## First, the words you'll keep seeing (in plain English)
@@ -161,10 +169,18 @@ This is where the setup pain usually hides. Two ways to go:
     keyboards and mice on a boat** — they're fiddly to pair and drop out at the worst moment (learned
     the hard way). The USB-dongle kind just works.
 
-### Fixing it from shore (do this whatever you choose)
-Install a remote-access tool — we use **Tailscale** (free) — so you, or we, can log in and fix or update
-the box from home without going to the boat. It turns "it's playing up and the boat's across town" into
-a two-minute job.
+### ★ The genuinely special bit — dial into your boat from home
+Install a free remote-access tool (we use **Tailscale**) and your boat box becomes reachable from your
+armchair. This is quietly one of the best reasons to run a little computer aboard at all:
+
+- **Check it from home** — is the box online? is data flowing? — *before* you drive to the marina.
+- **Fix or update it without leaving the couch** — you, or **we**, log in from shore and sort it out
+  without setting foot on the boat. (It's exactly how we've talked a boat's setup back to life
+  remotely — the owner didn't have to do a thing.)
+- **Over-the-air updates** — the box quietly keeps itself current; no trudging down with a laptop.
+
+It turns *"it's playing up and the boat's across town"* into a two-minute job — and it means **help is a
+message away, not a boat trip.** A plain plotter can't do any of this; a little computer aboard can.
 
 > **Bottom line:** a **Pi** is the cheap, low-power, no-screen appliance; a **mini-PC** is the
 > higher-power, do-everything nav computer. Both run exactly the same software — pick by whether you want
@@ -242,6 +258,10 @@ power converter and some weatherproofing, or step up to a ready-made **YDWG-02**
 - **Boat has no computer at all?** → a little Raspberry Pi + the CANable gadget (Way B).
 - **Confused by all of it?** → that's fine. Message us and we'll tell you the one thing to buy for
   *your* boat. Helping you get set up is the whole point.
+- **Want to go deeper / do it your way?** → brilliant — half the fun is building your own. Search
+  **"Signal K"**, **"OpenCPN"**, **"boat data Raspberry Pi"**, or your gateway's name and you'll find a
+  whole community that's already solved most of this and loves sharing. We stand on their shoulders —
+  so can you. These options are just a starting map.
 
 *For the technically-minded: this is standard NMEA 2000 / CAN at 250 kbps decoded by canboat/Signal K;
 the paths above map to SocketCAN (Linux/Pi), a serial N2K→USB gateway (Windows/Mac), or an N2K→WiFi
