@@ -121,6 +121,52 @@ computer. (A boat that already runs Signal K on a fixed screen doesn't need the 
 
 ---
 
+## The brain: which computer runs it — and does it need a screen?
+
+Remember, something has to *run the software* on the boat, always on: the translator (Signal K), our
+uploader, and — the fun part — the **shared crew cockpit** everyone's phones connect to. A wireless
+gateway can't do that; only a computer can. You've got three sensible choices:
+
+- **A Raspberry Pi** — cheapest, and it **sips power** (a few watts — barely touches the boat battery).
+  It runs **"headless"**: no screen or keyboard needed on the boat at all. Downside: it's a
+  single-purpose little appliance — it does the boat-data job and not much else.
+- **A repurposed mini-PC running Linux** — a proper computer with real storage and memory that also
+  **doubles as your whole nav station**. Pair it with a **touchscreen** and one screen gives you charts,
+  Telltale, weather, web and email — **way more versatile, and a lot cheaper, than buying a new
+  chartplotter** — and the touchscreen means **no keyboard to fumble with offshore**. The honest
+  downsides: it **uses a lot more power** (roughly 15–65+ watts vs a Pi's handful — a real consideration
+  on battery or solar), and it's **more of a faff to set up**. Brilliant if you want one do-everything
+  machine at the nav table; overkill if you just want the data flowing.
+- **A nav computer you already run** — if you've already got a machine that stays powered at the nav
+  station, just run the software on that. Nothing new to buy.
+
+### Does it need a screen, keyboard and mouse?
+This is where the setup pain usually hides. Two ways to go:
+
+- **Headless (best for a Pi / a set-and-forget box):** no screen or keyboard on the boat. Set it up
+  **once at home** with a monitor and keyboard, then unplug them — on the boat you control everything
+  from your **phone or laptop over the boat WiFi** (Signal K and Telltale just open in a browser). This
+  deletes the whole "mount a screen, find a keyboard" headache.
+- **With a screen (a real nav-station machine, like a mini-PC):** you'll want a display and input:
+  - **Screen:** a small **12 V HDMI monitor**, a marine display, or — best for offshore — a
+    **touchscreen** (skip the keyboard entirely; tap it with wet hands on a pitching boat, the way a
+    plotter works, and it's the input that actually suits being at sea).
+  - **Keyboard / mouse:** a cheap **wired** USB keyboard, or — nicer at a nav table — a **mini wireless
+    keyboard-with-trackpad that uses a little USB dongle** (the 2.4 GHz kind). **Avoid Bluetooth
+    keyboards and mice on a boat** — they're fiddly to pair and drop out at the worst moment (learned
+    the hard way). The USB-dongle kind just works.
+
+### Fixing it from shore (do this whatever you choose)
+Install a remote-access tool — we use **Tailscale** (free) — so you, or we, can log in and fix or update
+the box from home without going to the boat. It turns "it's playing up and the boat's across town" into
+a two-minute job.
+
+> **Bottom line:** a **Pi** is the cheap, low-power, no-screen appliance; a **mini-PC** is the
+> higher-power, do-everything nav computer. Both run exactly the same software — pick by whether you want
+> a quiet appliance or a multi-purpose machine, and budget the extra watts if it's the mini-PC.
+
+---
+
 ## Way C — a wireless box, no computer needed (the tidy end-goal) ★
 
 Instead of a gadget tethered to a laptop, fit a **gateway** on the boat network that broadcasts the
