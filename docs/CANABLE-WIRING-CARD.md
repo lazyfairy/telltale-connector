@@ -73,10 +73,14 @@ Then in **Signal K** → add a connection:
 - Point Telltale's connector at Signal K as usual.
 
 ### A‑2. Windows / Mac laptop — honest caveat
-Native SocketCAN is **Linux‑only**. On Windows/Mac a CANable works via **slcan** (a serial COM
-port) with tools like SavvyCAN, but Signal K's N2K path is **not** a well‑trodden route there.
-If the boat's laptop is Windows/Mac, the genuinely easier tap is a gateway that presents as a
-standard **Actisense/serial** device — see box below — rather than fighting the CANable.
+**Signal K itself runs fine on Windows and Mac** (it's a Node.js app) — that's *not* the problem.
+The catch is one layer below it: the CANable's easy driver is **SocketCAN, a Linux kernel feature**,
+and **Windows/Mac have no SocketCAN**. So Signal‑K‑on‑Windows still can't read a *bare* CANable the
+normal way. On Windows/Mac a CANable can be coaxed to work via **slcan** (a serial COM port) with
+tools like SavvyCAN, but wiring that into Signal K's N2K path is off the beaten track. If the boat's
+laptop is Windows/Mac, the genuinely easier tap is a gateway that presents as a standard
+**Actisense/serial** device (a COM port `canboatjs` reads on *any* OS) — see box below — rather than
+fighting the CANable. **In short: the bottleneck is the CAN adapter's driver model, not Signal K.**
 
 > **If it's not a Linux laptop, buy the right USB gateway instead of a bare CANable.**
 > **Yacht Devices YDNU‑02N** (~USD$249) = virtual COM port, no driver needed, well‑trodden
@@ -151,6 +155,26 @@ Yacht Devices **YDWG‑02** or a **MacArthur HAT** Pi box when a boat wants it l
 sleep or ashore, and it's the same shape as the club‑side WiFi bridge — one mental model. The
 CANable/laptop path is how you *prove the data flows today*; the WiFi gateway is how you'd
 actually leave it on a boat.
+
+---
+
+## Where to buy (NZ) — starting points
+
+*Pointers, not the only options — prices move; check current stock.*
+
+| Part | Where (NZ) |
+|---|---|
+| **Raspberry Pi** (Pi 4 / Pi Zero 2 W) + PSU, SD card, case | **[PiShop.nz](https://pishop.nz)** — the NZ Pi retailer |
+| **12 V→5 V buck**, jumper wire, breadboard, ESP32 dev board | PiShop.nz, or search the part on **AliExpress** for the cheapest |
+| **CANable** USB‑CAN adapter | search "CANable" on **AliExpress** (~NZ$25–40); or a marine N2K **MacArthur HAT** for a Pi |
+| **SN65HVD230** CAN transceiver, **MP1584** buck, **MAX3232** level‑shifter | **AliExpress** (a few dollars each) |
+| **Elfin EW11** (RS‑serial→WiFi) | AliExpress / industrial‑IoT sellers (~NZ$26) |
+| **RTL‑SDR dongle + antenna** (for the shore‑station AIS path) | search "RTL‑SDR" on AliExpress; or a kit from an SDR retailer |
+| **Marine gateways** — Yacht Devices **YDNU‑02N / YDWG‑02**, Actisense **NGX‑1‑USB / W2K‑1** | NZ marine‑electronics dealers (Burnsco and chandlery/marine shops), or the makers' own resellers |
+
+> **Rule of thumb:** the **Pi + accessories** from PiShop.nz (fast, local, supported); the **ultra‑cheap
+> CAN/ESP32/serial bits** from AliExpress (a few dollars, longer shipping); the **marine gateways** from a
+> marine‑electronics dealer. For a demo, order the cheap bits early — AliExpress shipping is the long pole.
 
 ---
 
