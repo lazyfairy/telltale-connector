@@ -1,160 +1,165 @@
-# CANable → NMEA 2000 → Signal K — wiring & setup card
+# Getting your boat's data onto Telltale — a plain-English guide
 
-**What this is:** how to tap a boat's NMEA 2000 backbone with a cheap CANable USB‑CAN
-adapter and get the data (AIS + wind/depth/heading/speed) into Signal K — and from there
-into Telltale. Three paths, cheapest first. Print it and take it to the boat.
+**The short version:** your boat's instruments (wind, depth, speed, and often AIS) already talk to
+each other over a little onboard network. This guide shows how to "listen in" on that network and
+send the data to Telltale, so your races record themselves and you can replay them afterwards.
+There are a few ways to do it — cheapest first. You do **not** need to understand any of the tech
+words to follow along; we explain each one as it comes up.
 
-> **This is a DEMO BUILD.** Goal: the **cheapest, easiest** way to prove boat data flowing
-> into Telltale, that we can then hand to **other boats** to copy. So we lead with the ~NZ$40
-> CANable, keep the steps short, and note exactly where it stays easy (Linux/Pi) vs. where a
-> boat is better off spending a bit more (Windows/Mac laptop, or the no‑computer WiFi route).
-
-> **NMEA 2000 is just CAN bus at 250 kbps.** A CANable is a USB‑to‑CAN adapter, so
-> electrically it *can* read the backbone directly. The catches are all in termination,
-> power and software — not the wiring. Read the "four things that bite" box before you cut
-> anything.
+> **This is a "prove it works" build.** The goal is the **cheapest, simplest** way to see your boat's
+> data flowing into Telltale — something you can then show other boats and say "here, copy this."
 
 ---
 
-## Pick your path
+## First, the words you'll keep seeing (in plain English)
 
-| Path | What you plug into | Cost (boat‑side) | Best for | Trade‑off |
-|---|---|---|---|---|
-| **A — Laptop** | CANable USB → a laptop you already own | ~NZ$40 (CANable + drop cable) | Trying it out, one‑off race capture | Laptop must be aboard & awake; **easiest on Linux** (see caveat) |
-| **B — Boat Kit (Pi)** | CANable USB → pre‑imaged Raspberry Pi running Signal K | ~NZ$120 + CANable | A permanent, headless box on boats with no nav computer | One more box to power (12 V) |
-| **C — WiFi gateway** | *No computer* — a N2K→WiFi gateway on the backbone | ~NZ$180–350 | The proper answer: any phone/laptop reads it over boat WiFi | Costs more than a CANable |
+Don't worry about memorising these — glance back whenever one shows up.
 
-**For the demo / other boats:** cheapest and easiest to copy is **Path A on a Linux laptop or
-the Pi** (~NZ$40 of parts). If a boat only has a Windows/Mac laptop, don't fight the CANable —
-a USB gateway is easier (box in Path A). **C (WiFi) is the endgame** once a boat wants it left
-in permanently. On *Laissez Faire* you need none of these — the Vesper's own USB port already
-gives Signal K AIS + instruments.
+- **NMEA 2000** (say "nimya two-thousand") — the little **network your boat's instruments use to talk
+  to each other**. If your wind, depth and speed all show up on your chartplotter, they're almost
+  certainly chatting over NMEA 2000. It's just a special cable running around the boat.
+- **AIS** — the system boats use to **see each other on a screen** (name, position, speed). Racing
+  yachts broadcast it; that's what lets Telltale draw the fleet on a map.
+- **CAN bus** — the *type* of wiring NMEA 2000 uses under the hood. You'll see it because the cheap
+  adapter we use is a "USB-to-CAN" adapter. Think of it as the language on the wire.
+- **CANable** — a **small, cheap USB gadget (~NZ$40)** that plugs into that boat network at one end
+  and into a computer's USB port at the other. It's the "listening device."
+- **A gateway** — a **box you buy that does the same listening job**, but tidier and often wireless.
+  More expensive than the CANable, but plug-and-play.
+- **Raspberry Pi** (or just "Pi") — a **tiny, cheap computer** (about the size of a deck of cards,
+  ~NZ$60–120). People leave one on the boat to do a job quietly forever.
+- **Linux** — a **free operating system** (like Windows or macOS, but free and light). A Raspberry Pi
+  runs Linux. You don't have to "do Linux" — the boat box comes set up.
+- **Signal K** — a **free program that reads all those instrument messages and turns them into tidy,
+  readable data**. It's the translator that sits between the raw boat network and Telltale. It runs on
+  a Pi, a Windows laptop, a Mac — anything.
+- **The Telltale connector** — our **small free program that takes the data from Signal K and sends it
+  to Telltale**. Set-and-forget.
+
+**So the whole plan, in one sentence:** *plug a listening gadget into the boat network → a translator
+program (Signal K) makes sense of it → our connector sends it to Telltale.* That's it.
 
 ---
 
-## The wiring (Paths A & B — identical)
+## The three ways to do it (pick one)
 
-A NMEA 2000 **drop cable** is a 5‑pin M12 (A‑coded) connector. Only three wires matter:
+| Way | What you plug in | Rough cost | Best if… |
+|---|---|---|---|
+| **A — Use a laptop** | A cheap USB gadget (CANable) into a laptop you already own | ~NZ$40 | You just want to try it / grab one race |
+| **B — Leave a tiny computer aboard** | The same gadget into a little Raspberry Pi that stays on the boat | ~NZ$120 + gadget | Your boat has no onboard computer and you want it automatic |
+| **C — A wireless box, no computer** | A "gateway" box that puts the data on your boat's WiFi | ~NZ$180–350 | You want it fitted permanently and forget about it |
 
-| N2K wire | Colour | → CANable terminal |
+**Easiest to try today:** Way A or B for about **NZ$40 of parts**. **Way C is the tidy end-goal** once a
+boat wants it left in for good. *(If your boat has a Vesper AIS unit like Laissez Faire, you may need
+none of this — its own USB port already feeds Signal K.)*
+
+---
+
+## What you're actually plugging into (the wiring)
+
+Skip this bit if someone handy is doing the wiring — hand them this section.
+
+Your boat network has **drop cables** — spare sockets you can plug into (a round 5-pin connector called
+an M12). You only connect **three wires** from it to the CANable gadget:
+
+| Wire on the boat cable | Colour | Connect to on the CANable |
 |---|---|---|
-| CAN‑H | **white** | CAN‑H |
-| CAN‑L | **blue** | CAN‑L |
-| Shield / drain | bare | GND |
-| NET‑C (0 V) | black | GND (same reference) |
-| NET‑S (+12 V) | **red** | **leave disconnected** |
+| CAN-H | **white** | CAN-H |
+| CAN-L | **blue** | CAN-L |
+| Ground / shield | bare + **black** | GND |
+| Power (+12 V) | **red** | **leave it disconnected** |
 
-Use a spare drop cable or an M12 field‑attachable socket; land white/blue/bare(+black) onto
-the CANable screw terminals. Plug the CANable USB into the computer. Physically, that's it.
+The gadget gets its power from the USB cable, so you **don't** connect the red 12-volt wire. That's the
+whole wiring job.
 
-### ⚠ Four things that bite people
-1. **Power from USB, not the bus.** The red wire carries 12 V — the CANable is powered over
-   USB. Don't feed bus 12 V into it. Leave the red wire capped.
-2. **You are a DROP, not an END — no terminator.** A N2K backbone needs exactly **two** 120 Ω
-   terminators, one at each physical end. **Do NOT** fit the CANable's onboard 120 Ω jumper —
-   a third terminator corrupts the whole bus. Just confirm the backbone already has its two.
-3. **Bitrate is fixed at 250 kbps.** Set it when you bring the interface up (below).
-4. **Software is not automatic.** Raw CAN frames aren't readable data — canboat / Signal K
-   decodes the PGNs into wind, depth, AIS, etc.
+### ⚠ Four things that trip people up
+1. **Power comes from USB, not the boat.** Leave the **red** wire capped — don't feed it 12 volts.
+2. **You're plugging into a spare socket, not the end of the line — don't add a "terminator."** The
+   boat network needs exactly two little end-caps (terminators), which it already has. The CANable has
+   a switch/jumper to add one — **leave it off**, or you'll scramble the whole network.
+3. **There's a speed setting: 250 (kbps).** Whoever sets it up enters this once. Just so it's not a
+   surprise.
+4. **Plugging in isn't enough — a program has to translate.** The raw messages are gibberish until
+   Signal K decodes them. That's the next step, and it's just software.
 
 ---
 
-## Path A — standard laptop (path of least resistance)
+## Way A — use a laptop you already own
 
-### A‑1. Linux laptop — the smooth path (CANable = native SocketCAN)
+### On a Linux laptop or a Raspberry Pi (the smooth path)
+This is where the cheap CANable shines. Whoever sets it up runs a couple of lines to switch the gadget
+on, then adds it inside Signal K:
+
 ```bash
-# CANable with candleLight firmware shows up as a SocketCAN device (can0)
+# turn the CANable on and check data is arriving
 sudo ip link set can0 up type can bitrate 250000
-candump can0                       # sanity: you should see frames
+candump can0                       # you should see lines scrolling = it's hearing the boat
 ```
-Then in **Signal K** → add a connection:
-- Data type: **NMEA 2000**, source: **canboatjs / SocketCAN (canbus‑canboatjs)**, device `can0`.
-- Signal K decodes PGNs → wind/depth/heading/AIS appear under the vessel.
-- Point Telltale's connector at Signal K as usual.
+Then in **Signal K** (the translator program): add a connection → type **NMEA 2000** → source
+**canboatjs / SocketCAN**, device `can0`. Wind, depth, AIS and the rest appear. Point the Telltale
+connector at Signal K and you're done.
 
-### A‑2. Windows / Mac laptop — honest caveat
-**Signal K itself runs fine on Windows and Mac** (it's a Node.js app) — that's *not* the problem.
-The catch is one layer below it: the CANable's easy driver is **SocketCAN, a Linux kernel feature**,
-and **Windows/Mac have no SocketCAN**. So Signal‑K‑on‑Windows still can't read a *bare* CANable the
-normal way. On Windows/Mac a CANable can be coaxed to work via **slcan** (a serial COM port) with
-tools like SavvyCAN, but wiring that into Signal K's N2K path is off the beaten track. If the boat's
-laptop is Windows/Mac, the genuinely easier tap is a gateway that presents as a standard
-**Actisense/serial** device (a COM port `canboatjs` reads on *any* OS) — see box below — rather than
-fighting the CANable. **In short: the bottleneck is the CAN adapter's driver model, not Signal K.**
+### On a Windows or Mac laptop — read this so you don't waste money
+**Signal K (the translator) runs perfectly well on Windows and Mac** — that is *not* the problem. The
+snag is one layer down: the cheap CANable's easy "just works" driver is a **Linux-only** feature.
+Windows and Mac don't have it, so the CANable is fiddly there even though Signal K itself is happy.
 
-> **If it's not a Linux laptop, buy the right USB gateway instead of a bare CANable.**
-> **Yacht Devices YDNU‑02N** (~USD$249) = virtual COM port, no driver needed, well‑trodden
-> with Signal K on every OS; or **Actisense NGX‑1‑USB** (~USD$350). Both plug into a normal
-> backbone drop (M12 5‑pin) and are cross‑platform plug‑and‑play. The CANable is the cheap
-> option *specifically when you'll run Linux*.
+**So on a Windows/Mac laptop, don't fight the CANable — buy a plug-and-play gateway instead:**
+
+> A **Yacht Devices YDNU-02N** (~USD$249) or **Actisense NGX-1-USB** (~USD$350) plugs into the same boat
+> socket and shows up on your laptop like a normal USB device — no driver drama, works on any computer.
+> The cheap CANable is the bargain option **only when you'll run Linux (or the Pi).**
 
 ---
 
-## Path B — Boat Kit (headless Raspberry Pi)
+## Way B — a little computer that lives on the boat (Raspberry Pi)
 
-Same wiring as Path A, but the CANable plugs into a **pre‑imaged Raspberry Pi** that runs
-Signal K + the Telltale connector and lives on the boat permanently.
-
-- Bring `can0` up at boot (systemd `network`/`ip link`, bitrate 250000).
-- Pi powered from a 12 V→5 V DC‑DC off the boat's supply.
-- Signal K set up exactly as A‑1; the Telltale connector (`provision.sh`) points at it.
-- This is for boats with **no** nav computer. A boat that already runs Signal K (like the HP
-  mini) doesn't need the Pi — just the CANable + drop cable.
+Exactly the same wiring as Way A, but the CANable plugs into a **small pre-set-up Raspberry Pi** that
+stays on the boat, runs Signal K and the Telltale connector, and does the job automatically every time
+you sail. It's powered from the boat's 12-volt supply. This is the answer for boats with **no** onboard
+computer. (A boat that already runs Signal K on a fixed screen doesn't need the Pi — just the gadget.)
 
 ---
 
-## Path C — straight onto WiFi (the next better thing) ★
+## Way C — a wireless box, no computer needed (the tidy end-goal) ★
 
-Skip the tethered computer entirely: put a **N2K→WiFi gateway** on the backbone and every
-device on the boat's WiFi (phone, laptop, the club box) reads the data over TCP/UDP. No cable
-to a laptop, nothing to keep awake on a nav table.
+Instead of a gadget tethered to a laptop, fit a **gateway** on the boat network that broadcasts the
+data over your boat's **WiFi**. Then any phone or laptop on the boat can read it — nothing to keep awake
+on the nav table.
 
-**Off‑the‑shelf (recommended):**
-- **Yacht Devices YDWG‑02** (N2K → WiFi, ~USD$180). Tees into the backbone, serves NMEA over
-  TCP/UDP; Signal K (or any nav app) connects to its IP. OS‑agnostic, wireless, low‑power.
-- Actisense **W2K‑1** is the equivalent if you prefer Actisense.
-
-**DIY (our firmware):** an ESP32 + CAN transceiver running
-[`telltale_gateway_n2k.ino`](race-modeller/telltale_gateway_n2k.ino) reads the N2K backbone and
-pushes it onto WiFi — the same idea as the club receiver bridge, boat‑side. Cheapest, but it's
-a build, not a purchase. Full recipe below.
+- **Buy one (easiest):** **Yacht Devices YDWG-02** (~USD$180) or Actisense **W2K-1**. Plug it into the
+  network; it serves the data over WiFi; Signal K (or a nav app) connects to it.
+- **Build one (cheapest, ~NZ$20, but it's a soldering project):** a tiny **ESP32** board with our free
+  firmware ([`telltale_gateway_n2k.ino`](../firmware/telltale_gateway_n2k.ino)) does the same thing.
+  Parts and steps are below.
 
 ---
 
-## Path D — DIY ESP32 → WiFi (~NZ$20, the cheap wireless build) ★ demo pick
+## Way D — the cheap build-it-yourself wireless option (~NZ$20) ★
 
-The cheapest way to get boat data onto WiFi so **any phone/laptop reads it** — no tethered
-computer, ~NZ$20 in parts. This is the one to hand other boats for a cheap demo.
+The cheapest way to get boat data onto WiFi so **any phone reads it** — about NZ$20 in parts. This is the
+one to hand other boats for a cheap demo. It's a small electronics project (a bit of soldering).
 
-### NMEA 2000 (CAN backbone) → WiFi
-| Part | ~Price | Notes |
+### If your instruments are on the modern network (NMEA 2000)
+| Part (plain name) | ~Price | What it's for |
 |---|---|---|
-| ESP32 dev board (e.g. WROOM‑32 DevKitC) | NZ$10–15 | the WiFi brain |
-| CAN transceiver — **SN65HVD230** breakout | NZ$3–5 | 3.3 V CAN, pairs with ESP32 |
-| 12 V→5 V buck (e.g. MP1584) | NZ$2–4 | power it off the boat (bench = USB) |
-| N2K drop cable / M12 socket | ~NZ$15 | tap the backbone |
+| ESP32 dev board | NZ$10–15 | the little WiFi brain |
+| SN65HVD230 "CAN transceiver" board | NZ$3–5 | lets the ESP32 hear the boat network |
+| 12 V→5 V "buck" converter | NZ$2–4 | powers it from the boat (or use USB on the bench) |
+| Boat network drop cable / socket | ~NZ$15 | to plug into |
 
-**Wiring:** N2K CAN‑H/CAN‑L → SN65HVD230 CANH/CANL; transceiver CTX/CRX → two ESP32 GPIOs
-(set in the firmware, e.g. GPIO 4/5); GND common; power the ESP32 from the buck (N2K 12 V in) or
-USB. **Same drop rules as above — no terminator, don't take bus 12 V into the ESP32 directly.**
-Flash [`telltale_gateway_n2k.ino`](race-modeller/telltale_gateway_n2k.ino) (Arduino IDE + the
-`NMEA2000`/`NMEA2000_esp32` libraries). It joins the boat WiFi and serves NMEA over TCP/UDP →
-add it as a connection in Signal K.
+**Wiring:** boat CAN-H/CAN-L → the transceiver board → two pins on the ESP32; grounds joined; power from
+the converter. **Same rules as before — no terminator, don't put 12 volts into the ESP32 directly.**
+Load our firmware with the free Arduino app. It joins the boat WiFi and serves the data → add it in
+Signal K.
 
-### NMEA 0183 (serial instruments) → WiFi
-- **DIY:** ESP32 + a **MAX3232/RS422** level‑shifter (~NZ$2) on the 0183 TX pair → same WiFi push.
-- **Buy‑instead (barely‑DIY, recommended fallback):** an **Elfin EW11** (RS485/RS232→WiFi,
-  ~NZ$26) — no soldering, proven, already in our kit notes. Wire the 0183 output to it, point
-  AIS‑catcher / Signal K at its TCP port.
+### If your instruments are the older serial type (NMEA 0183)
+- **Build it:** ESP32 + a small "MAX3232/RS422" adapter (~NZ$2) on the instrument's output.
+- **Buy it instead (barely any DIY):** an **Elfin EW11** (~NZ$26) — a little box that turns a serial
+  output into WiFi, no soldering. Point Signal K (or our AIS tool) at it.
 
-**Reality check:** a bare ESP32 isn't marine‑hardened — add the buck for 12 V and a bit of
-weatherproofing for a permanent fit. Perfect for a **cheap demo / other boats**; step up to a
-Yacht Devices **YDWG‑02** or a **MacArthur HAT** Pi box when a boat wants it left in for good.
-
-**Why C wins:** no computer aboard, any device reads it, it survives the laptop going to
-sleep or ashore, and it's the same shape as the club‑side WiFi bridge — one mental model. The
-CANable/laptop path is how you *prove the data flows today*; the WiFi gateway is how you'd
-actually leave it on a boat.
+**Reality check:** a bare ESP32 isn't waterproof — fine for a demo, but for a permanent fit add the
+power converter and some weatherproofing, or step up to a ready-made **YDWG-02** box.
 
 ---
 
@@ -164,26 +169,30 @@ actually leave it on a boat.
 
 | Part | Where (NZ) |
 |---|---|
-| **Raspberry Pi** (Pi 4 / Pi Zero 2 W) + PSU, SD card, case | **[PiShop.nz](https://pishop.nz)** — the NZ Pi retailer |
-| **12 V→5 V buck**, jumper wire, breadboard, ESP32 dev board | PiShop.nz, or search the part on **AliExpress** for the cheapest |
-| **CANable** USB‑CAN adapter | search "CANable" on **AliExpress** (~NZ$25–40); or a marine N2K **MacArthur HAT** for a Pi |
-| **SN65HVD230** CAN transceiver, **MP1584** buck, **MAX3232** level‑shifter | **AliExpress** (a few dollars each) |
-| **Elfin EW11** (RS‑serial→WiFi) | AliExpress / industrial‑IoT sellers (~NZ$26) |
-| **RTL‑SDR dongle + antenna** (for the shore‑station AIS path) | search "RTL‑SDR" on AliExpress; or a kit from an SDR retailer |
-| **Marine gateways** — Yacht Devices **YDNU‑02N / YDWG‑02**, Actisense **NGX‑1‑USB / W2K‑1** | NZ marine‑electronics dealers (Burnsco and chandlery/marine shops), or the makers' own resellers |
+| **Raspberry Pi** + power supply, SD card, case | **[PiShop.nz](https://pishop.nz)** — the NZ Raspberry Pi shop |
+| Power converter, jumper wires, breadboard, ESP32 board | PiShop.nz, or search the part on **AliExpress** for the cheapest |
+| **CANable** USB gadget | search "CANable" on **AliExpress** (~NZ$25–40) |
+| The little electronics bits (SN65HVD230, MP1584, MAX3232) | **AliExpress** (a few dollars each) |
+| **Elfin EW11** (serial→WiFi box) | AliExpress / industrial-IoT sellers (~NZ$26) |
+| **RTL-SDR dongle + antenna** (for the separate shore-station AIS setup) | search "RTL-SDR" on AliExpress, or an SDR retailer |
+| **Ready-made gateways** — Yacht Devices YDNU-02N / YDWG-02, Actisense NGX-1 / W2K-1 | NZ marine-electronics dealers (Burnsco and chandleries), or the makers' resellers |
 
-> **Rule of thumb:** the **Pi + accessories** from PiShop.nz (fast, local, supported); the **ultra‑cheap
-> CAN/ESP32/serial bits** from AliExpress (a few dollars, longer shipping); the **marine gateways** from a
-> marine‑electronics dealer. For a demo, order the cheap bits early — AliExpress shipping is the long pole.
+> **Rule of thumb:** get the **Pi + bits** from PiShop.nz (fast, local, helpful); get the **ultra-cheap
+> electronics** from AliExpress (a few dollars, but slow shipping — order early); get the **marine
+> gateways** from a marine dealer.
 
 ---
 
-## One‑line decision
+## Still not sure? One-line answers
 
-- **Got a Linux laptop and NZ$40?** → CANable, Path A, today.
-- **Windows/Mac laptop?** → YDNU‑02N USB gateway (don't fight the CANable).
-- **Want it permanent with no laptop?** → YDWG‑02 WiFi gateway (Path C) — the endgame.
-- **Boat has no computer at all?** → Boat Kit Pi + CANable (Path B).
+- **Got a Linux laptop and NZ$40?** → CANable, Way A, today.
+- **Only a Windows/Mac laptop?** → buy a YDNU-02N gateway (don't fight the CANable).
+- **Want it permanent with no laptop?** → a YDWG-02 WiFi gateway (Way C).
+- **Boat has no computer at all?** → a little Raspberry Pi + the CANable gadget (Way B).
+- **Confused by all of it?** → that's fine. Message us and we'll tell you the one thing to buy for
+  *your* boat. Helping you get set up is the whole point.
 
-*Related: [[BOAT-KIT-SPEC.md]], reference‑boat‑hardware, reference‑receiver‑setup (club‑side
-WiFi bridge), project‑backlog (gateway decision).*
+*For the technically-minded: this is standard NMEA 2000 / CAN at 250 kbps decoded by canboat/Signal K;
+the paths above map to SocketCAN (Linux/Pi), a serial N2K→USB gateway (Windows/Mac), or an N2K→WiFi
+gateway/DIY ESP32. Related: [[BOAT-KIT-SPEC.md]], reference-boat-hardware, reference-receiver-setup,
+project-backlog.*
