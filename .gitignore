@@ -20,3 +20,6 @@ station-key*.txt
 .idea/
 .DS_Store
 Thumbs.db
+
+# fetched by fetch-webroot.sh (the served tactician PWA) — not committed, pulled fresh from the site
+webroot/

@@ -20,6 +20,7 @@ always logged locally on your own box too, and it's exportable from Telltale at 
 |---|---|
 | **`signalk_telltale.py`** | The connector. Reads a Signal K server and pushes own-boat instruments + other vessels' AIS to Telltale. Store-and-forward, offline logging, **defer/flush for metered links**, and an optional **on-boat crew tactical-sync server** (`--boat-sync`). Pure stdlib — runs on any Pi. |
 | **`boat_sync.py`** | **Boat-local crew sync (LAN-only).** A tiny web server the connector can run so every phone/tablet on the boat WiFi shares the same pinged start line + mark positions live — the boat auto-keeps the tightest GPS fix. **Never leaves the boat** (nothing sent to Telltale). See [`--boat-sync`](#share-the-crew-cockpit-on-the-boat-wifi----boat-sync). |
+| **`fetch-webroot.sh`** | Pulls the tactician page + assets from telltaleracing.com into `./webroot` so `--boat-sync` can serve the cockpit over the boat WiFi offline. Run once while online; re-run to refresh. |
 | **`provision.sh`** | One-command installer that turns a fresh Raspberry Pi into a shore AIS station or a boat device, auto-starting on boot. |
 | **`nmea_wifi_telltale.py`** | Bridge for boats that emit NMEA over WiFi/TCP/UDP (no Signal K needed). See [`docs/NMEA-WIFI-BRIDGE.md`](docs/NMEA-WIFI-BRIDGE.md). |
 | **`ais_relay.py`** | Relay AIS from a local receiver to Telltale (and optionally on to other consumers). |
@@ -152,9 +153,11 @@ python3 signalk_telltale.py --boat "Your Boat" --station-key KEY --race NAME \
   a marine-grade fix automatically beats a phone in a pocket. No fiddling, no one reading a screen out.
 - **It never leaves the boat.** This data is **not** sent to Telltale — it lives only on the boat's
   own network. (It's completely separate from the track/AIS the connector uploads.)
-- **Serves the page too.** Point `--boat-sync-webroot` at a copy of the tactician page and the box
-  hosts it over the boat WiFi at `http://<box>:8137/start` — so it works with **no internet at all**,
-  and crew phones load it same-origin (no browser security snags).
+- **Serves the page too.** Run **`./fetch-webroot.sh`** once (while online) to pull the current
+  tactician page + its assets into `./webroot`; the box then hosts it over the boat WiFi at
+  `http://<box>:8137/start` — so it works with **no internet at all**, and crew phones load it
+  same-origin (no browser security snags). `--boat-sync` auto-uses `./webroot` if it's there. Without a
+  webroot the sync **API** still runs; you just don't get the self-hosted page.
 - **Keep out the neighbours.** Set a short `--boat-sync-code` so a nearby boat on a shared marina WiFi
   can't join in.
 
